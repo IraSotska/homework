@@ -8,17 +8,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
+import java.time.ZoneId;
+import java.util.*;
 
-import static java.util.stream.Collectors.toList;
+import static java.time.LocalDateTime.now;
 
 @Service
 public class DataService {
 
     public static final int PAGE_SIZE = 50;
-    public static final int DATA_SIZE = 50000;
+    public static final int DATA_SIZE = 1024 * 1024;
     public static final int ROW_COUNT = 500;
     private final DataRepository dataRepository;
 
@@ -30,33 +29,26 @@ public class DataService {
     @Transactional
     public void updateModificationDate() {
         var pageRequest = PageRequest.of(0, PAGE_SIZE);
-        var todayDate = LocalDateTime.now();
+        Page<Data> dataPage = dataRepository.findAll(pageRequest);
 
-        Page<Data> dataPage;
-
-        do {
-            dataPage = dataRepository.findAll(pageRequest);
-            List<Data> content = dataPage.getContent();
-            for(Data data: content) {
-                data.setModificationDate(todayDate);
-            }
-            dataRepository.saveAll(content);
+        while (!dataPage.isEmpty()) {
             pageRequest = pageRequest.next();
-        } while (!dataPage.isLast());
+
+            var content = dataPage.getContent();
+            content.forEach(data -> data.setModificationDate(now(ZoneId.systemDefault())));
+            dataRepository.saveAll(content);
+
+            dataPage = dataRepository.findAll(pageRequest);
+        }
     }
 
+    // -Xmx256m
     public void createData() {
         char[] charArray = new char[DATA_SIZE];
         Arrays.fill(charArray, 'a');
         var data = String.copyValueOf(charArray);
-
         for (int i = 0; i < ROW_COUNT; i++) {
-            dataRepository.save(new Data(data, LocalDateTime.now()));
+            dataRepository.save(new Data(data, now(ZoneId.systemDefault())));
         }
-    }
-
-    private void updateDateForPage(Page<Data> dataPage, LocalDateTime todayDate) {
-        var ids = dataPage.get().map(Data::getId).collect(toList());
-        dataRepository.updateModificationDate(ids, todayDate);
     }
 }

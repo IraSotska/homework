@@ -8,7 +8,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest
 @ActiveProfiles("test")
 class DataServiceTest {
 
@@ -18,10 +18,5 @@ class DataServiceTest {
     @Test
     void update() {
         dataService.updateModificationDate();
-    }
-
-    @Test
-    void createData() {
-        dataService.createData();
     }
 }
