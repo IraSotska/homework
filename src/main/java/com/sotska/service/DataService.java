@@ -9,7 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.ZoneId;
-import java.util.*;
+import java.util.Arrays;
 
 import static java.time.LocalDateTime.now;
 
@@ -37,7 +37,8 @@ public class DataService {
             var content = dataPage.getContent();
             content.forEach(data -> data.setModificationDate(now(ZoneId.systemDefault())));
             dataRepository.saveAll(content);
-
+            content = null;
+            dataPage = null;
             dataPage = dataRepository.findAll(pageRequest);
         }
     }
